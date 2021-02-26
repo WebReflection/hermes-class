@@ -35,6 +35,7 @@ The idea behind is that *Hermes* is already fairly compatible with *ES2015*, plu
 
 ### Caveats
 
+  * it is *not possible* to return a different context/instance from any constructor
   * it is *not possible* to use `super(...)` in any meaningful way. Signatures are sealed with extends, and super invoked by default with the provided arguments. However, since signature have a precise length, it is possible to add extra, irrelevant, arguments, example:
 
 ```js

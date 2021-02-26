@@ -1,4 +1,4 @@
-const Class = require('../cjs');
+const Class = require('../cjs/index.js');
 
 const Base = Class({});
 

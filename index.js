@@ -1,4 +1,4 @@
-var hermesClass = (function (exports) {
+var HermesClass = (function (exports) {
   'use strict';
 
   const {
@@ -35,29 +35,31 @@ var hermesClass = (function (exports) {
       static: Statics
     } = definition;
 
-    const Class = definition.hasOwnProperty('constructor') ?
-      (Super ?
+    const hasConstructor = definition.hasOwnProperty('constructor');
+
+    const Class = Super ?
+      (isNative(Super) ?
         function Class() {
           const self = construct(Super, arguments, Class);
-          Constructor.apply(self, arguments);
-          return setPrototypeOf(self, prototype);
+          if (hasConstructor)
+            Constructor.apply(self, arguments);
+          return self;
         } :
         function Class() {
-          return Constructor.apply(this, arguments);
+          const override = Super.apply(this, arguments);
+          const self = override ? setPrototypeOf(override, prototype) : this;
+          if (hasConstructor)
+            Constructor.apply(self, arguments);
+          return self;
         }
       ) :
-      (Super ?
-        (isNative(Super) ?
-          function Class() {
-            return construct(Super, arguments, Class);
-          } :
-          function Class() {
-            const self = Super.apply(this, arguments);
-            return self ? setPrototypeOf(self, prototype) : this;
-          }
-        ) :
+      (hasConstructor ?
+        function Class() {
+          Constructor.apply(this, arguments);
+        } :
         function Class() {}
-      );
+      )
+    ;
 
     const {prototype} = Class;
 
