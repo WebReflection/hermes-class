@@ -2,6 +2,7 @@
 const {
   defineProperties,
   getOwnPropertyDescriptor,
+  getPrototypeOf,
   setPrototypeOf,
   toString
 } = Object;
@@ -25,6 +26,32 @@ const define = (target, definition) => {
   }
   defineProperties(target, properties);
 };
+
+const superProtoHandler = {
+  get: (target, name) => (...args) => {
+    const self = target();
+    const proto = getPrototypeOf(self);
+    const method = proto[name];
+    let parent = proto;
+    while ((method === parent[name]))
+      parent = getPrototypeOf(parent);
+    try {
+      return parent[name].apply(setPrototypeOf(self, parent), args);
+    }
+    finally {
+      setPrototypeOf(self, proto);
+    }
+  }
+};
+
+const superProto = {
+  super: {
+    get() {
+      return new Proxy(() => this, superProtoHandler);
+    }
+  }
+};
+
 
 module.exports = definition => {
   const {
@@ -64,12 +91,13 @@ module.exports = definition => {
   if (Super) {
     setPrototypeOf(Class, Super);
     setPrototypeOf(prototype, Super.prototype);
+    defineProperties(prototype, superProto);
   }
-
-  define(prototype, definition);
 
   if (Statics)
     define(Class, Statics);
+
+  define(prototype, definition);
 
   return Class;
 };

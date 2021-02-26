@@ -1,6 +1,7 @@
 const {
   defineProperties,
   getOwnPropertyDescriptor,
+  getPrototypeOf,
   setPrototypeOf,
   toString
 } = Object;
@@ -24,6 +25,32 @@ const define = (target, definition) => {
   }
   defineProperties(target, properties);
 };
+
+const superProtoHandler = {
+  get: (target, name) => (...args) => {
+    const self = target();
+    const proto = getPrototypeOf(self);
+    const method = proto[name];
+    let parent = proto;
+    while ((method === parent[name]))
+      parent = getPrototypeOf(parent);
+    try {
+      return parent[name].apply(setPrototypeOf(self, parent), args);
+    }
+    finally {
+      setPrototypeOf(self, proto);
+    }
+  }
+};
+
+const superProto = {
+  super: {
+    get() {
+      return new Proxy(() => this, superProtoHandler);
+    }
+  }
+};
+
 
 const Class = definition => {
   const {
@@ -63,16 +90,17 @@ const Class = definition => {
   if (Super) {
     setPrototypeOf(Class, Super);
     setPrototypeOf(prototype, Super.prototype);
+    defineProperties(prototype, superProto);
   }
-
-  define(prototype, definition);
 
   if (Statics)
     define(Class, Statics);
 
+  define(prototype, definition);
+
   return Class;
 };
-const console={assert(e,m){if(!e)print(m);}};
+const console={log:print,assert(e,m){if(!e)print(m);}};
 
 
 const Base = Class({});
@@ -148,10 +176,75 @@ console.assert(new ExtendNothing instanceof ExtendNothing, 'ExtendNothing');
 const DoubleSet = Class({
   extends: Set,
   add(value) {
-    return Set.prototype.add.call(this, value * 2);
+    return this.super.add(value * 2);
   }
 });
 
 const ms = new DoubleSet;
 console.assert(ms.add(2) === ms, 'DoubleSet add');
 console.assert(ms.has(4), 'DoubleSet has');
+
+const A = Class({
+  static: {
+    test: 'A',
+    method() {
+      console.log(this.test + '.method');
+    }
+  },
+  constructor(a) {
+    this.a = a;
+  },
+  method() {
+    console.log('A.prototype.method');
+  }
+});
+
+const B = Class({
+  extends: A,
+  static: {
+    test: 'B',
+    method() {
+      A.method();
+      console.log(this.test + '.method');
+    }
+  },
+  constructor(a, b) {
+    this.super(a);
+    this.b = b;
+  },
+  method() {
+    this.super.method();
+    console.log('B.prototype.method');
+  }
+});
+
+const C = Class({
+  extends: B,
+  static: {
+    test: 'C',
+    method() {
+      B.method();
+      console.log(this.test + '.method');
+    }
+  },
+  constructor(a, b, c) {
+    this.super(a, b);
+    this.c = c;
+  },
+  method() {
+    this.super.method();
+    console.log('C.prototype.method');
+  }
+});
+
+console.assert(new C('a', 'b', 'c') instanceof C, 'C');
+console.assert(new C('a', 'b', 'c') instanceof B, 'C');
+console.assert(new C('a', 'b', 'c') instanceof A, 'C');
+console.assert(new C('a', 'b', 'c').a === 'a', 'C.a');
+console.assert(new C('a', 'b', 'c').b === 'b', 'C.b');
+console.assert(new C('a', 'b', 'c').c === 'c', 'C.c');
+
+new C('a', 'b', 'c').method();
+C.method();
+
+console.log('\x1b[1mOK\x1b[0m');

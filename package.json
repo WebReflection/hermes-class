@@ -6,7 +6,7 @@
   "scripts": {
     "build": "npm run cjs && npm run rollup:es && npm run rollup:index && npm run fix:default && npm run hermes && npm run test",
     "cjs": "ascjs --no-default esm cjs",
-    "hermes": "cat esm/index.js | sed 's/export default/const Class =/' > test/hermes.js && echo 'const console={assert(e,m){if(!e)print(m);}};' >> test/hermes.js && cat test/index.js | sed 's/const Class = .*//' >> test/hermes.js",
+    "hermes": "cat esm/index.js | sed 's/export default/const Class =/' > test/hermes.js && echo 'const console={log:print,assert(e,m){if(!e)print(m);}};' >> test/hermes.js && cat test/index.js | sed 's/const Class = .*//' >> test/hermes.js",
     "rollup:es": "rollup --config rollup/es.config.js && sed -i.bck 's/^var /self./' es.js && rm -rf es.js.bck",
     "rollup:index": "rollup --config rollup/index.config.js",
     "fix:default": "sed -i 's/({})/({}).default/' index.js && sed -i 's/({})/({}).default/' es.js",
