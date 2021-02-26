@@ -1,5 +1,7 @@
 # hermes-class
 
+[![Downloads](https://img.shields.io/npm/dm/hermes-class.svg)](https://www.npmjs.com/package/hermes-class) [![Build Status](https://travis-ci.com/WebReflection/hermes-class.svg?branch=main)](https://travis-ci.com/WebReflection/hermes-class) [![Coverage Status](https://coveralls.io/repos/github/WebReflection/hermes-class/badge.svg?branch=main)](https://coveralls.io/github/WebReflection/hermes-class?branch=main) [![CSP strict](https://webreflection.github.io/csp/strict.svg)](https://webreflection.github.io/csp/#-csp-strict)
+
 A [classtrophobic](https://github.com/WebReflection/classtrophobic#readme) inspired approach to define [Hermes](https://github.com/facebook/hermes#readme) compatible classes.
 
 ```js
