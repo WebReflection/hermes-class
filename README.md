@@ -8,7 +8,7 @@ A [classtrophobic](https://github.com/WebReflection/classtrophobic#readme) inspi
 import Class from 'hermes-class';
 
 const MySet = Class({
-  static: {name: 'MySet'}
+  static: {name: 'MySet'},
   extends: Set,
   get length() {
     return this.size;
