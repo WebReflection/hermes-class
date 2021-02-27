@@ -427,6 +427,18 @@ function benchmark(name, Class, times = hermes ? 0xFFF : 0xFFFF) {
 log('');
 
 globalThis.Promise.resolve()
+  .then(() => {
+    try {
+      return benchmark(' Native Class', Function(`return class NativeSet extends Set {
+        add() {
+          for (let i = 0; i < arguments.length; i++)
+            super.add(arguments[i]);
+          return this;
+        }
+      }`)())
+    }
+    catch (meh) {}
+  })
   .then(() => benchmark(' Fake Class', FakeClass))
   .then(() => benchmark(' Babel Class', BabelSet))
   .then(() => benchmark(' Hermes Class', HermesSet))
