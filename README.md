@@ -83,10 +83,10 @@ Following an `hermes -jit test/benchmark.js` run, using `0xFFF` iterations over 
 
 |           |Fake Class |Babel Class|Hermes Class|Hermes Class + super|
 |-----------|-----------|-----------|------------|--------------------|
-|creation   | 493ms     | 797ms     | 385ms      | 363ms              |
-|add(1)     | 54ms      | 71ms      | 74ms       | 953ms              |
+|creation   | 493ms     | 797ms     | 378ms      | 363ms              |
+|add(1)     | 54ms      | 71ms      | 68ms       | 953ms              |
 |has(1)     | 55ms      | 92ms      | 53ms       | 73ms               |
-|size       | 60ms      | 43ms      | 31ms       | 34ms               |
+|size       | 63ms      | 43ms      | 30ms       | 34ms               |
 |@@iterate  | 920ms     | 443ms     | 416ms      | 400ms              |
 
 
