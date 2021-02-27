@@ -378,6 +378,27 @@ Object.defineProperties(FakeClass.prototype, {
   }}
 });
 
+function Literal(...args) {
+  const _ = new Set(...args);
+  return {
+    __proto__: Set.prototype,
+    add() {
+      for (let i = 0; i < arguments.length; i++)
+        _.add(arguments[i]);
+      return this;
+    },
+    has(value) {
+      return _.has(value);
+    },
+    get size() {
+      return _.size;
+    },
+    get [Symbol.iterator]() {
+      return _[Symbol.iterator].bind(_);
+    }
+  };
+}
+
 function benchmark(name, Class, times = hermes ? 0xFFF : 0xFFFF) {
   return new globalThis.Promise((resolve, reject) => {
     log(`\x1b[1m${name}\x1b[0m`);
@@ -420,7 +441,7 @@ function benchmark(name, Class, times = hermes ? 0xFFF : 0xFFFF) {
     date = new Date - date;
     log(` @@iterate: ${date}ms`);
     log('');
-    resolve();
+    globalThis.setTimeout(resolve, 500);
   });
 }
 
@@ -439,8 +460,9 @@ globalThis.Promise.resolve()
     }
     catch (meh) {}
   })
-  .then(() => benchmark(' Fake Class', FakeClass))
   .then(() => benchmark(' Babel Class', BabelSet))
-  .then(() => benchmark(' Hermes Class', HermesSet))
+  .then(() => benchmark(' Literal Object', Literal))
+  .then(() => benchmark(' Fake Class', FakeClass))
   .then(() => benchmark(' Hermes Class + super', HermesSetSuper))
+  .then(() => benchmark(' Hermes Class', HermesSet))
 ;
