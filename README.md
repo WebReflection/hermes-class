@@ -76,3 +76,99 @@ const ms = new MySet;
 ms.add(2);
 ms.has(4);  // true
 ```
+
+## Benchmark
+
+Following an `hermes -jit test/benchmark.js` run, using `0xFFF` iterations over a native *Set* extend:
+
+|           |Fake Class |Babel Class|Hermes Class|Hermes Class + super|
+|-----------|-----------|-----------|------------|--------------------|
+|creation   | 493ms     | 797ms     | 385ms      | 363ms              |
+|add(1)     | 54ms      | 71ms      | 74ms       | 953ms              |
+|has(1)     | 55ms      | 92ms      | 53ms       | 73ms               |
+|size       | 60ms      | 43ms      | 31ms       | 34ms               |
+|@@iterate  | 920ms     | 443ms     | 416ms      | 400ms              |
+
+
+
+### Fake Class
+
+This is an old, repeated, bloated way, to simulate an *extend* without actually being an *extend*. This way is the fastest out there in *NodeJS*, but it shows not ideal performance in *Hermes*:
+
+```js
+const internal = Symbol('internal');
+
+function FakeClass(...args) {
+  this[internal] = new Set(...args);
+}
+
+Object.setPrototypeOf(FakeClass.prototype, Set.prototype);
+Object.defineProperties(FakeClass.prototype, {
+  add: {value() {
+    for (let i = 0; i < arguments.length; i++)
+      this[internal].add(arguments[i]);
+    return this;
+  }},
+  has: {value(value) {
+    return this[internal].has(value);
+  }},
+  size: {get() {
+    return this[internal].size;
+  }},
+  [Symbol.iterator]: {get() {
+    return this[internal][Symbol.iterator].bind(this[internal]);
+  }}
+});
+```
+
+
+
+### Babel Class
+
+This class is [the transpiled version](https://babeljs.io/repl#?browsers=ie%20%3C%2011&build=&builtIns=entry&spec=false&loose=false&code_lz=MYGwhgzhAEBCYCMCmIDKSAu0kA8NIDsATGdLAbwChpowiiAKASmippoDMB7AJ2gZCZoAS2gBeaAAYA3COgAeWjwDmAVwC2hDBAB0ggsowALWcIDUZptXYBICKoAOSHjrqMwKjVogBtYQF0maWsaHkxVHgJoY2EIYJoAX0okoA&debug=false&forceAllTransforms=true&shippedProposals=false&circleciRepo=&evaluate=false&fileSize=false&timeTravel=false&sourceType=module&lineWrap=false&presets=env&prettier=true&targets=&version=7.13.8&externalPlugins=) of the following one:
+
+```js
+class BabelSet extends Set {
+  add() {
+    for (let i = 0; i < arguments.length; i++)
+    	super.add(arguments[i]);
+    return this;
+  }
+}
+```
+
+
+
+### Hermes Class
+
+This is the suggested approach to *explictly* invoke *super* methods:
+
+```js
+const {add: Set_add} = Set.prototype;
+
+const HermesSet = Class({
+  extends: Set,
+  add() {
+    for (let i = 0; i < arguments.length; i++)
+      Set_add.call(this, arguments[i]);
+    return this;
+  }
+});
+```
+
+
+
+### Hermes Class + super
+
+This class uses the *super* utility, but it is obvious it has a performance cost due runtime *prototype* swaps and &Proxy* creation and handling:
+
+```js
+const HermesSetSuper = Class({
+  extends: Set,
+  add() {
+    for (let i = 0; i < arguments.length; i++)
+      this.super.add(arguments[i]);
+    return this;
+  }
+});
+```
