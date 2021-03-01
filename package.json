@@ -1,7 +1,7 @@
 {
   "name": "hermes-class",
   "version": "0.2.2",
-  "description": "A classtrophobic inspired approach to define to define Hermes compatible classes",
+  "description": "A classtrophobic inspired approach to define Hermes compatible classes",
   "main": "./cjs/index.js",
   "scripts": {
     "build": "npm run cjs && npm run rollup:es && npm run rollup:index && npm run fix:default && npm run hermes && npm run test",
