@@ -1,6 +1,6 @@
 {
   "name": "hermes-class",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "A classtrophobic inspired approach to define Hermes compatible classes",
   "main": "./cjs/index.js",
   "scripts": {
