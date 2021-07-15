@@ -11,7 +11,7 @@ const {
   ownKeys
 } = Reflect;
 
-const reserved = new Set(['constructor', 'extends', 'static']);
+const reserved = new Set(['constructor', 'extends', 'static', 'super']);
 
 const isNative = Class => toString.call(Class).includes('[native code]');
 
@@ -56,7 +56,8 @@ export default definition => {
   const {
     constructor: Constructor,
     extends: Super,
-    static: Statics
+    static: Statics,
+    super: Args,
   } = definition;
 
   const hasConstructor = definition.hasOwnProperty('constructor');
@@ -64,13 +65,20 @@ export default definition => {
   const Class = Super ?
     (isNative(Super) ?
       function Class() {
-        const self = construct(Super, arguments, Class);
+        const self = construct(
+          Super,
+          Args ? Args.map(reduced, arguments) : arguments,
+          Class
+        );
         if (hasConstructor)
           Constructor.apply(self, arguments);
         return self;
       } :
       function Class() {
-        const override = Super.apply(this, arguments);
+        const override = Super.apply(
+          this,
+          Args ? Args.map(reduced, arguments) : arguments,
+        );
         const self = override ? setPrototypeOf(override, prototype) : this;
         if (hasConstructor)
           Constructor.apply(self, arguments);
@@ -81,11 +89,11 @@ export default definition => {
       function Class() {
         Constructor.apply(this, arguments);
       } :
-      function Class() {}
+      function Class() { }
     )
-  ;
+    ;
 
-  const {prototype} = Class;
+  const { prototype } = Class;
 
   if (Super) {
     setPrototypeOf(Class, Super);
@@ -100,3 +108,7 @@ export default definition => {
 
   return Class;
 };
+
+function reduced(i) {
+  return this[i];
+}

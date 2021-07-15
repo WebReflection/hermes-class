@@ -11,7 +11,7 @@ const {
   ownKeys
 } = Reflect;
 
-const reserved = new Set(['constructor', 'extends', 'static']);
+const reserved = new Set(['constructor', 'extends', 'static', 'super']);
 
 const isNative = Class => toString.call(Class).includes('[native code]');
 
@@ -56,7 +56,8 @@ const Class = definition => {
   const {
     constructor: Constructor,
     extends: Super,
-    static: Statics
+    static: Statics,
+    super: Args,
   } = definition;
 
   const hasConstructor = definition.hasOwnProperty('constructor');
@@ -64,13 +65,20 @@ const Class = definition => {
   const Class = Super ?
     (isNative(Super) ?
       function Class() {
-        const self = construct(Super, arguments, Class);
+        const self = construct(
+          Super,
+          Args ? Args.map(reduced, arguments) : arguments,
+          Class
+        );
         if (hasConstructor)
           Constructor.apply(self, arguments);
         return self;
       } :
       function Class() {
-        const override = Super.apply(this, arguments);
+        const override = Super.apply(
+          this,
+          Args ? Args.map(reduced, arguments) : arguments,
+        );
         const self = override ? setPrototypeOf(override, prototype) : this;
         if (hasConstructor)
           Constructor.apply(self, arguments);
@@ -81,11 +89,11 @@ const Class = definition => {
       function Class() {
         Constructor.apply(this, arguments);
       } :
-      function Class() {}
+      function Class() { }
     )
-  ;
+    ;
 
-  const {prototype} = Class;
+  const { prototype } = Class;
 
   if (Super) {
     setPrototypeOf(Class, Super);
@@ -100,6 +108,10 @@ const Class = definition => {
 
   return Class;
 };
+
+function reduced(i) {
+  return this[i];
+}
 const console={log:print,assert(e,m){if(!e)print(m);}};
 
 
@@ -167,7 +179,7 @@ console.assert(new ExtendFurtherLess([1, 2]).size === 2, 'ExtendFurtherLess');
 console.assert(new ExtendFurtherLess([1, 2]).test === 'OK', 'ExtendFurtherLess');
 
 const ExtendNothing = Class({
-  extends: function () {}
+  extends: function () { }
 });
 
 console.assert(new ExtendNothing instanceof ExtendNothing, 'ExtendNothing');
@@ -246,5 +258,33 @@ console.assert(new C('a', 'b', 'c').c === 'c', 'C.c');
 
 new C('a', 'b', 'c').method();
 C.method();
+
+const args = [];
+const Parent = Class({
+  constructor(a, c) {
+    args.push(a, c);
+  }
+});
+const Child = Class({
+  extends: Parent,
+  super: [0, 2],
+  constructor(a, b, c) {
+    this.super(a, c);
+    args.push(b);
+  }
+});
+new Child('a', 'b', 'c');
+console.assert(args.join(',') === 'a,c,b');
+
+const ReMap = Class({
+  extends: Map,
+  super: [],
+  constructor(key, value) {
+    this.super();
+    this.set(key, value);
+  }
+});
+const rm = new ReMap('key', 'value');
+console.assert(rm.get('key') === 'value');
 
 console.log('\x1b[1mOK\x1b[0m');

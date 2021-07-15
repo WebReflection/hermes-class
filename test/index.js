@@ -64,7 +64,7 @@ console.assert(new ExtendFurtherLess([1, 2]).size === 2, 'ExtendFurtherLess');
 console.assert(new ExtendFurtherLess([1, 2]).test === 'OK', 'ExtendFurtherLess');
 
 const ExtendNothing = Class({
-  extends: function () {}
+  extends: function () { }
 });
 
 console.assert(new ExtendNothing instanceof ExtendNothing, 'ExtendNothing');
@@ -143,5 +143,33 @@ console.assert(new C('a', 'b', 'c').c === 'c', 'C.c');
 
 new C('a', 'b', 'c').method();
 C.method();
+
+const args = [];
+const Parent = Class({
+  constructor(a, c) {
+    args.push(a, c);
+  }
+});
+const Child = Class({
+  extends: Parent,
+  super: [0, 2],
+  constructor(a, b, c) {
+    this.super(a, c);
+    args.push(b);
+  }
+});
+new Child('a', 'b', 'c');
+console.assert(args.join(',') === 'a,c,b');
+
+const ReMap = Class({
+  extends: Map,
+  super: [],
+  constructor(key, value) {
+    this.super();
+    this.set(key, value);
+  }
+});
+const rm = new ReMap('key', 'value');
+console.assert(rm.get('key') === 'value');
 
 console.log('\x1b[1mOK\x1b[0m');

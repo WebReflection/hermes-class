@@ -14,7 +14,7 @@ var HermesClass = (function (exports) {
     ownKeys
   } = Reflect;
 
-  const reserved = new Set(['constructor', 'extends', 'static']);
+  const reserved = new Set(['constructor', 'extends', 'static', 'super']);
 
   const isNative = Class => toString.call(Class).includes('[native code]');
 
@@ -59,7 +59,8 @@ var HermesClass = (function (exports) {
     const {
       constructor: Constructor,
       extends: Super,
-      static: Statics
+      static: Statics,
+      super: Args,
     } = definition;
 
     const hasConstructor = definition.hasOwnProperty('constructor');
@@ -67,13 +68,20 @@ var HermesClass = (function (exports) {
     const Class = Super ?
       (isNative(Super) ?
         function Class() {
-          const self = construct(Super, arguments, Class);
+          const self = construct(
+            Super,
+            Args ? Args.map(reduced, arguments) : arguments,
+            Class
+          );
           if (hasConstructor)
             Constructor.apply(self, arguments);
           return self;
         } :
         function Class() {
-          const override = Super.apply(this, arguments);
+          const override = Super.apply(
+            this,
+            Args ? Args.map(reduced, arguments) : arguments,
+          );
           const self = override ? setPrototypeOf(override, prototype) : this;
           if (hasConstructor)
             Constructor.apply(self, arguments);
@@ -84,11 +92,11 @@ var HermesClass = (function (exports) {
         function Class() {
           Constructor.apply(this, arguments);
         } :
-        function Class() {}
+        function Class() { }
       )
-    ;
+      ;
 
-    const {prototype} = Class;
+    const { prototype } = Class;
 
     if (Super) {
       setPrototypeOf(Class, Super);
@@ -103,6 +111,10 @@ var HermesClass = (function (exports) {
 
     return Class;
   };
+
+  function reduced(i) {
+    return this[i];
+  }
 
   exports.default = index;
 

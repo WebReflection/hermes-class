@@ -10,6 +10,7 @@ import Class from 'hermes-class';
 const MySet = Class({
   static: {name: 'MySet'},
   extends: Set,
+  super: [],
   get length() {
     return this.size;
   }
@@ -29,6 +30,25 @@ The idea behind is that *Hermes* is already fairly compatible with *ES2015*, plu
   * obtain great performance in *Hermes* for projects heavily based on classes.
   * define accessors and static properties, simplifying future refactoring.
   * allows using `this.super(...)` in constructor, *as no-op*, and proxied `this.super.method(...)` within **methods only** (*not static*).
+  * optionally re-map received arguments in the `constructor` to the `extend` constructor.
+
+```js
+const A = Class({
+  constructor(a, c) {
+    this.a = a;
+    this.c = c;
+  }
+});
+const B = Class({
+  extends: A,
+  super: [0, 2],
+  constructor(a, b, c) {
+    // implicit super arguments as:
+    // A.call(this, arguments[0], arguments[2])
+    this.b = b;
+  }
+});
+```
 
 ### Goals
 
