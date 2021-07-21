@@ -89,11 +89,11 @@ const Class = definition => {
       function Class() {
         Constructor.apply(this, arguments);
       } :
-      function Class() { }
+      function Class() {}
     )
-    ;
+  ;
 
-  const { prototype } = Class;
+  const {prototype} = Class;
 
   if (Super) {
     setPrototypeOf(Class, Super);
